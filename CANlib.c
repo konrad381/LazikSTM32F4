@@ -12,11 +12,6 @@ void initCan(void) {
 	CAN_FilterInitTypeDef CAN_FilterInitStructure;
 
 	//inicjalizacja przerwañ
-	NVIC_InitStructure.NVIC_IRQChannel = CAN1_TX_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0;
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
 
 	NVIC_InitStructure.NVIC_IRQChannel = CAN1_RX0_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0;
@@ -67,26 +62,20 @@ void initCan(void) {
 
 	//inicjalizacja CAN i filtrów
 	CAN_DeInit(CAN1);
-	CAN_ITConfig(CAN1, CAN_IT_TME, ENABLE);
-	CAN_ITConfig(CAN1, CAN_IT_FMP0, ENABLE);
+	//------------------------------------------------------------
+//	CAN_ITConfig(CAN1, CAN_IT_FMP0, ENABLE);
 	CAN_Init(CAN1, &CAN_InitStructure);
 	CAN_FilterInit(&CAN_FilterInitStructure);
 
 	/* Transmit Structure preparation */
-	TxMessage.StdId = 0x00;
-	TxMessage.ExtId = 0x00;
-	TxMessage.RTR = CAN_RTR_DATA;
-	TxMessage.IDE = CAN_ID_STD;
-	TxMessage.DLC = 3;
+	txMessage.StdId = 0x00;
+	txMessage.ExtId = 0x00;
+	txMessage.RTR = CAN_RTR_DATA;
+	txMessage.IDE = CAN_ID_STD;
+	txMessage.DLC = 3;
 
 }
-//====================================================================================================
-//Obs³uga przerwania przy nadawaniu
-void CAN1_TX_IRQHandler(void) {
-	if (CAN_GetITStatus(CAN1, CAN_IT_TME) != RESET) {
-		CAN_ClearITPendingBit(CAN1, CAN_IT_TME);
-	}
-}
+
 //====================================================================================================
 //Obs³uga przerwania po odbierze
 void CAN1_RX0_IRQHandler(void) {
@@ -102,20 +91,20 @@ void CAN1_RX0_IRQHandler(void) {
 void sendSpeed(Silniki_strona strona, int predkosc1, int predkosc2,
 		int predkosc3) {
 	switch (strona) {
-	case Prawa:
-		TxMessage.StdId = 0x123;
+	case PRAWA:
+		txMessage.StdId = 0x123;
 		break;
-	case Oba:
-		TxMessage.StdId = 0x00;
+	case OBA:
+		txMessage.StdId = 0x00;
 		break;
-	case Lewa:
-		TxMessage.StdId = 0x124;
+	case LEWA:
+		txMessage.StdId = 0x124;
 		break;
 	}
-	TxMessage.Data[0] = predkosc1;
-	TxMessage.Data[1] = predkosc2;
-	TxMessage.Data[2] = predkosc3;
-	CAN_Transmit(CAN1, &TxMessage);
+	txMessage.Data[0] = predkosc1;
+	txMessage.Data[1] = predkosc2;
+	txMessage.Data[2] = predkosc3;
+	CAN_Transmit(CAN1, &txMessage);
 }
 
 //====================================================================================================
@@ -125,7 +114,7 @@ void sendSpeed(Silniki_strona strona, int predkosc1, int predkosc2,
 //Kierunek: 	Przod, Tyl
 //Predkosc: wartosc predkosci od 0 do 2^16
 void konwersja(int adres, Silnik_kierunk kierunek, int predkosc) {
-	TxMessage.Data[adres] = ((predkosc & 0xFE) | (kierunek & 01));
-	TxMessage.Data[adres + 1] = predkosc >> 8;
+	txMessage.Data[adres] = ((predkosc & 0xFE) | (kierunek & 01));
+	txMessage.Data[adres + 1] = predkosc >> 8;
 }
 

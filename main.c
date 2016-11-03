@@ -1,37 +1,33 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stm32f4xx.h"
-#include "CANlib.h"
-#include "BootloaderLib.h"
-#include "UARTlib.h"
 
-static __IO uint32_t TimingDelay;
-volatile int wartoscDomyslna = 200;
+static __IO uint32_t timingDelay;
+volatile int wartoscOpoznienia = 200;
+volatile uint8_t lazikRuch = 1;
 
-void GPIO_init();
-void Delay(__IO uint32_t nTime);
-int i = 0;
+void delay(__IO uint32_t nTime);
+void initGPIO(void);
 
 //===================================================================================================
 int main(void) {
-// sprawdzenie taktowania zegara
 	initBootloader();
-	RCC_ClocksTypeDef RCC_Clocks;
-	RCC_GetClocksFreq(&RCC_Clocks);
 	if (SysTick_Config(SystemCoreClock / 1000)) {
 		/* Capture error */
 		while (1)
 			;
 	}
-	GPIO_init();
-	GPIO_SetBits(GPIOC, GPIO_Pin_1);
+	initGPIO();
 	initCan();
 	initUart3();
+	initAdc();
+	GPIO_SetBits(GPIOC, GPIO_Pin_1);
 	while (1) {
+		if(batteryError!=0){
 		GPIO_SetBits(GPIOC, GPIO_Pin_0);
-		Delay(100);
+		delay(100);
 		GPIO_ResetBits(GPIOC, GPIO_Pin_0);
-		Delay(100);
+		delay(100);
+		}
 	}
 }
 
@@ -40,7 +36,7 @@ int main(void) {
  * PC0 - czerwona dioda
  * PC1 - zolta dioda
  */
-void GPIO_init() {
+void initGPIO() {
 
 	GPIO_InitTypeDef gpio;
 
@@ -56,30 +52,31 @@ void GPIO_init() {
 }
 
 //==================================================================================================
-void Delay(__IO uint32_t nTime) {
-	TimingDelay = nTime;
+void delay(__IO uint32_t nTime) {
+	timingDelay = nTime;
 
-	while (TimingDelay != 0)
+	while (timingDelay != 0)
 		;
 }
 
 //==================================================================================================
 void TimingDelay_Decrement(void) {
-	if (TimingDelay != 0) {
-		TimingDelay--;
+	if (timingDelay != 0) {
+		timingDelay--;
 	}
 }
 
 //==================================================================================================
 void ResetTimer() {
-	TimingDelay = wartoscDomyslna;
+	timingDelay = wartoscOpoznienia;
 }
 
 //==================================================================================================
 void SysTick_Handler(void) {
 	TimingDelay_Decrement();
-	if (TimingDelay == 0) {
-		sendSpeed(Oba, 128, 128, 128);
+	if (timingDelay == 0 && lazikRuch != 0) {
+		sendSpeed(OBA, 128, 128, 128);
+		lazikRuch = 0;
 	}
 }
 

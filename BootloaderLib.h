@@ -1,3 +1,6 @@
+//Nazwa: BootloaderLib.h
+//Autor: Konrad Aleksiejuk
+//Projekt: £azik marsjañski KNR
 /*
  * INSTRUKCJA OBS£UGI BIBLIOTEKI
  * 1)dolacz biblioteke do pliku z funkcja main za pomoc¹ polecenia #include "BootLoaderLib.h"

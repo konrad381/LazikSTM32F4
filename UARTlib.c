@@ -1,58 +1,58 @@
 #include "UARTlib.h"
-#include "CANlib.h"
-#include "main.h"
-
-volatile char c;
-volatile uint8_t wysylane_buf[100];
-volatile uint8_t j = 0, poczatek_buf = 0, koniec_buf = 0;
-//volatile uint16_t adc_value;
-/* Funkcja oblugi przerwan */
-volatile int ramka = 0;
 
 //====================================================================================================
 //funkcja obs³ugi przerwania od UART3
 void USART3_IRQHandler(void) {
 	//ODBIERANIE ZNAKÓW
+	char inputChar;
 	if (USART_GetITStatus(USART3, USART_IT_RXNE) != RESET) {
-		c = USART_ReceiveData(USART3);
-
-		switch (c) {
-		case 'w':
-			ResetTimer();
-			sendSpeed(Oba, 180, 180, 180);
-			break;
-		case 's':
-			ResetTimer();
-			sendSpeed(Oba, 74, 74, 74);
-			break;
-		case 'd':
-			ResetTimer();
-			sendSpeed(Prawa, 15, 15, 15);
-			sendSpeed(Lewa, 240, 240, 240);
-			break;
-		case 'a':
-			ResetTimer();
-			sendSpeed(Lewa, 15, 15, 15);
-			sendSpeed(Prawa, 240, 240, 240);
-			break;
-		case 'W':
-			ResetTimer();
-			sendSpeed(Oba, 255, 255, 255);
-			break;
-		case 'S':
-			ResetTimer();
-			sendSpeed(Oba, 1, 1, 1);
-			break;
-		case 'D':
-			ResetTimer();
-			sendSpeed(Prawa, 1, 1, 1);
-			sendSpeed(Lewa, 255, 255, 255);
-			break;
-		case 'A':
-			ResetTimer();
-			sendSpeed(Lewa, 1, 1, 1);
-			sendSpeed(Prawa, 255, 255, 255);
-
+		inputChar = USART_ReceiveData(USART3);
+		if (batteryError != 0) {
+			switch (inputChar) {
+			case 'w':
+				ResetTimer();
+				sendSpeed(OBA, 180, 180, 180);
+				lazikRuch = 1;
+				break;
+			case 's':
+				ResetTimer();
+				sendSpeed(OBA, 74, 74, 74);
+				lazikRuch = 1;
+				break;
+			case 'd':
+				ResetTimer();
+				sendSpeed(PRAWA, 15, 15, 15);
+				sendSpeed(LEWA, 240, 240, 240);
+				lazikRuch = 1;
+				break;
+			case 'a':
+				ResetTimer();
+				sendSpeed(LEWA, 15, 15, 15);
+				sendSpeed(PRAWA, 240, 240, 240);
+				lazikRuch = 1;
+				break;
+			case 'W':
+				ResetTimer();
+				sendSpeed(OBA, 255, 255, 255);
+				lazikRuch = 1;
+				break;
+			case 'S':
+				ResetTimer();
+				sendSpeed(OBA, 1, 1, 1);
+				lazikRuch = 1;
+				break;
+			case 'D':
+				ResetTimer();
+				sendSpeed(PRAWA, 1, 1, 1);
+				sendSpeed(LEWA, 255, 255, 255);
+				lazikRuch = 1;
+				break;
+			case 'A':
+				ResetTimer();
+				sendSpeed(LEWA, 1, 1, 1);
+				sendSpeed(PRAWA, 255, 255, 255);
+				lazikRuch = 1;
+			}
 		}
 	}
 }
