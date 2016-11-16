@@ -18,7 +18,7 @@ int main(void) {
 	}
 	initGPIO();
 	initCan();
-	initUart3();
+	initUart2();
 	initAdc();
 	GPIO_SetBits(GPIOC, GPIO_Pin_1);
 	while (1) {
