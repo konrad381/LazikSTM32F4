@@ -44,7 +44,8 @@ void initAdc() {
 	//---------------------------------------------------------------
 	//Ustawienie poziomu napiêcia powoduj¹cego przerwanie.
 	//1861 = 9V
-	ADC_AnalogWatchdogThresholdsConfig(ADC1, 4000, 1861);
+	//2172 = 10.5V
+	ADC_AnalogWatchdogThresholdsConfig(ADC1, 4000, 2172);
 	//--------------------------------------------------------------
 	ADC_AnalogWatchdogCmd(ADC1, ADC_AnalogWatchdog_SingleRegEnable);
 

@@ -10,6 +10,8 @@ void initGPIO(void);
 
 //===================================================================================================
 int main(void) {
+	RCC_ClocksTypeDef RCC_Clocks;
+	RCC_GetClocksFreq(&RCC_Clocks);
 	initBootloader();
 	if (SysTick_Config(SystemCoreClock / 1000)) {
 		/* Capture error */
@@ -22,11 +24,11 @@ int main(void) {
 	initAdc();
 	GPIO_SetBits(GPIOC, GPIO_Pin_1);
 	while (1) {
-		if(batteryError!=0){
-		GPIO_SetBits(GPIOC, GPIO_Pin_0);
-		delay(100);
-		GPIO_ResetBits(GPIOC, GPIO_Pin_0);
-		delay(100);
+		if (batteryError != 0) {
+			GPIO_SetBits(GPIOC, GPIO_Pin_0);
+			delay(100);
+			GPIO_ResetBits(GPIOC, GPIO_Pin_0);
+			delay(100);
 		}
 	}
 }

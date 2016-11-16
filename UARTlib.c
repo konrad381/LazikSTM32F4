@@ -2,56 +2,107 @@
 
 //====================================================================================================
 //funkcja obs³ugi przerwania od UART3
-void USART3_IRQHandler(void) {
+void USART2_IRQHandler(void) {
 	//ODBIERANIE ZNAKÓW
 	char inputChar;
-	if (USART_GetITStatus(USART3, USART_IT_RXNE) != RESET) {
-		inputChar = USART_ReceiveData(USART3);
+	volatile static uint8_t sterowanieJoystick = 0;
+	volatile static uint8_t licznik = 0;
+	if (USART_GetITStatus(USART2, USART_IT_RXNE) != RESET) {
+		inputChar = USART_ReceiveData(USART2);
 		if (batteryError == 0) {
-			switch (inputChar) {
-			case 'w':
-				ResetTimer();
-				sendSpeed(OBA, 180, 180, 180);
-				lazikRuch = 1;
-				break;
-			case 's':
-				ResetTimer();
-				sendSpeed(OBA, 74, 74, 74);
-				lazikRuch = 1;
-				break;
-			case 'd':
-				ResetTimer();
-				sendSpeed(PRAWA, 15, 15, 15);
-				sendSpeed(LEWA, 240, 240, 240);
-				lazikRuch = 1;
-				break;
-			case 'a':
-				ResetTimer();
-				sendSpeed(LEWA, 15, 15, 15);
-				sendSpeed(PRAWA, 240, 240, 240);
-				lazikRuch = 1;
-				break;
-			case 'W':
-				ResetTimer();
-				sendSpeed(OBA, 255, 255, 255);
-				lazikRuch = 1;
-				break;
-			case 'S':
-				ResetTimer();
-				sendSpeed(OBA, 1, 1, 1);
-				lazikRuch = 1;
-				break;
-			case 'D':
-				ResetTimer();
-				sendSpeed(PRAWA, 1, 1, 1);
-				sendSpeed(LEWA, 255, 255, 255);
-				lazikRuch = 1;
-				break;
-			case 'A':
-				ResetTimer();
-				sendSpeed(LEWA, 1, 1, 1);
-				sendSpeed(PRAWA, 255, 255, 255);
-				lazikRuch = 1;
+			if (sterowanieJoystick == 1) {
+				static int8_t wskazanieX;
+				static int8_t wskazanieY;
+				if (licznik == 0) {
+					wskazanieY = -inputChar;
+					licznik++;
+				} else if (licznik == 1) {
+					wskazanieX = -inputChar;
+					licznik = 0;
+					sterowanieJoystick = 0;
+					int predkoscPrawa;
+					int predkoscLewa;
+					if (wskazanieX <= 0) {
+						wskazanieY = -wskazanieY;
+					}
+					predkoscPrawa = (int) (wskazanieX * 1.28 + 127)
+							+ wskazanieY * 1.27;
+					predkoscLewa = (int) (wskazanieX * 1.28 + 127)
+							- wskazanieY * 1.27;
+
+					if (predkoscPrawa >= 255) {
+						predkoscPrawa = 254;
+					} else if (predkoscPrawa <= 0) {
+						predkoscPrawa = 1;
+					}
+					if (predkoscLewa >= 255) {
+						predkoscLewa = 254;
+					} else if (predkoscLewa <= 0) {
+						predkoscLewa = 1;
+					}
+					sendSpeed(LEWA, predkoscLewa, predkoscLewa, predkoscLewa);
+					sendSpeed(PRAWA, predkoscPrawa, predkoscPrawa,
+							predkoscPrawa);
+				}
+			} else {
+				switch (inputChar) {
+				case 'w':
+					ResetTimer();
+					sendSpeed(OBA, 180, 180, 180);
+					lazikRuch = 1;
+					break;
+				case 's':
+					ResetTimer();
+					sendSpeed(OBA, 74, 74, 74);
+					lazikRuch = 1;
+					break;
+				case 'd':
+					ResetTimer();
+					sendSpeed(PRAWA, 15, 15, 15);
+					sendSpeed(LEWA, 240, 240, 240);
+					lazikRuch = 1;
+					break;
+				case 'a':
+					ResetTimer();
+					sendSpeed(LEWA, 15, 15, 15);
+					sendSpeed(PRAWA, 240, 240, 240);
+					lazikRuch = 1;
+					break;
+				case 'W':
+					ResetTimer();
+					sendSpeed(OBA, 255, 255, 255);
+					lazikRuch = 1;
+					break;
+				case 'S':
+					ResetTimer();
+					sendSpeed(OBA, 1, 1, 1);
+					lazikRuch = 1;
+					break;
+				case 'D':
+					ResetTimer();
+					sendSpeed(PRAWA, 1, 1, 1);
+					sendSpeed(LEWA, 255, 255, 255);
+					lazikRuch = 1;
+					break;
+				case 'A':
+					ResetTimer();
+					sendSpeed(LEWA, 1, 1, 1);
+					sendSpeed(PRAWA, 255, 255, 255);
+					lazikRuch = 1;
+					break;
+				case 'v':
+					ResetTimer();
+					sterowanieJoystick = 1;
+					lazikRuch = 1;
+					break;
+				case ' ':
+					sendSpeed(OBA, 128, 128, 128);
+					lazikRuch = 0;
+					break;
+				case 'e':
+					batteryError = 0;
+					break;
+				}
 			}
 		}
 	}
@@ -129,11 +180,49 @@ void initUart2(void) {
 	USART_Cmd(USART2, ENABLE);
 }
 
-void USART2_IRQHandler(void) {
+void USART3_IRQHandler(void) {
+	//ODBIERANIE ZNAKÓW
 	char inputChar;
-		if (USART_GetITStatus(USART2, USART_IT_RXNE) != RESET) {
-			inputChar = USART_ReceiveData(USART2);
-			if (batteryError == 0) {
+	volatile static uint8_t sterowanieJoystick = 0;
+	volatile static uint8_t licznik = 0;
+	if (USART_GetITStatus(USART3, USART_IT_RXNE) != RESET) {
+		inputChar = USART_ReceiveData(USART3);
+		if (batteryError == 0) {
+			if (sterowanieJoystick == 1) {
+				static int8_t wskazanieX;
+				static int8_t wskazanieY;
+				if (licznik == 0) {
+					wskazanieY = -inputChar;
+					licznik++;
+				} else if (licznik == 1) {
+					wskazanieX = -inputChar;
+					licznik = 0;
+					sterowanieJoystick = 0;
+					int predkoscPrawa;
+					int predkoscLewa;
+					if (wskazanieX <= 0) {
+						wskazanieY = -wskazanieY;
+					}
+					predkoscPrawa = (int) (wskazanieX * 1.28 + 127)
+							+ wskazanieY * 1.27;
+					predkoscLewa = (int) (wskazanieX * 1.28 + 127)
+							- wskazanieY * 1.27;
+
+					if (predkoscPrawa >= 255) {
+						predkoscPrawa = 254;
+					} else if (predkoscPrawa <= 0) {
+						predkoscPrawa = 1;
+					}
+					if (predkoscLewa >= 255) {
+						predkoscLewa = 254;
+					} else if (predkoscLewa <= 0) {
+						predkoscLewa = 1;
+					}
+					sendSpeed(LEWA, predkoscLewa, predkoscLewa, predkoscLewa);
+					sendSpeed(PRAWA, predkoscPrawa, predkoscPrawa,
+							predkoscPrawa);
+				}
+			} else {
 				switch (inputChar) {
 				case 'w':
 					ResetTimer();
@@ -178,7 +267,21 @@ void USART2_IRQHandler(void) {
 					sendSpeed(LEWA, 1, 1, 1);
 					sendSpeed(PRAWA, 255, 255, 255);
 					lazikRuch = 1;
+					break;
+				case 'v':
+					ResetTimer();
+					sterowanieJoystick = 1;
+					lazikRuch = 1;
+					break;
+				case ' ':
+					sendSpeed(OBA, 128, 128, 128);
+					lazikRuch = 0;
+					break;
+				case 'e':
+					batteryError = 0;
+					break;
 				}
 			}
 		}
+	}
 }

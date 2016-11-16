@@ -4,7 +4,7 @@
 /*
  * Bibliotek do obs³ugi przetwornika ADC i zabezpieczenia baterii przed nadmiernym roza³dowaniem
  *
- * W momencie spadku napiêcia ponizej wartosci progowej (domyœlnie 9V) zmienna batteryError = 1
+ * W momencie spadku napiêcia ponizej wartosci progowej (domyœlnie 10.5V) zmienna batteryError = 1
  * Gdy bateria jest gotowa do pracy batteryError = 0
  * Aby aktywowac biblioteke wewn¹trz funkcji main nalezy umiescic funckjê initAdc();
  */

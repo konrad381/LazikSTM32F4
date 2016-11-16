@@ -12,8 +12,7 @@
 
 void USART3_IRQHandler(void);
 void initUart3(void);
-void initUart2(void);
 void USART2_IRQHandler(void);
-
+void initUart2(void);
 #endif
 
