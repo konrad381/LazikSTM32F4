@@ -11,7 +11,7 @@ void initCan(void) {
 	CAN_InitTypeDef CAN_InitStructure;
 	CAN_FilterInitTypeDef CAN_FilterInitStructure;
 
-	//inicjalizacja przerwañ
+	//inicjalizacja przerwaï¿½
 
 	NVIC_InitStructure.NVIC_IRQChannel = CAN1_RX0_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0;
@@ -19,13 +19,13 @@ void initCan(void) {
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
-	//uruchomienie zegarów
+	//uruchomienie zegarï¿½w
 	/* Enable GPIO clock */
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 	/* Enable CAN clock */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
 
-	//konfiguracja pinów CAN  PB8 CAN_RX/ PB9 CAN_TX
+	//konfiguracja pinï¿½w CAN  PB8 CAN_RX/ PB9 CAN_TX
 	GPIO_PinAFConfig(GPIOB, GPIO_PinSource8, GPIO_AF_CAN1);
 	GPIO_PinAFConfig(GPIOB, GPIO_PinSource9, GPIO_AF_CAN1);
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
@@ -39,7 +39,7 @@ void initCan(void) {
 	CAN_InitStructure.CAN_TTCM = DISABLE;
 	CAN_InitStructure.CAN_ABOM = DISABLE;
 	CAN_InitStructure.CAN_AWUM = DISABLE;
-	CAN_InitStructure.CAN_NART = ENABLE; //po wprowadzeniu wadomoœci do rejestru wiadomosc wysy³ana jest tylko jeden raz
+	CAN_InitStructure.CAN_NART = ENABLE; //po wprowadzeniu wadomoï¿½ci do rejestru wiadomosc wysyï¿½ana jest tylko jeden raz
 	CAN_InitStructure.CAN_RFLM = DISABLE;
 	CAN_InitStructure.CAN_TXFP = DISABLE;
 	CAN_InitStructure.CAN_Mode = CAN_Mode_Normal;
@@ -49,7 +49,7 @@ void initCan(void) {
 	CAN_InitStructure.CAN_BS2 = CAN_BS2_8tq;
 	CAN_InitStructure.CAN_Prescaler = 5;
 
-	//konfiguracja Filtrów CAN
+	//konfiguracja Filtrï¿½w CAN
 	CAN_FilterInitStructure.CAN_FilterNumber = 0;
 	CAN_FilterInitStructure.CAN_FilterMode = CAN_FilterMode_IdList;
 	CAN_FilterInitStructure.CAN_FilterScale = CAN_FilterScale_16bit;
@@ -60,7 +60,7 @@ void initCan(void) {
 	CAN_FilterInitStructure.CAN_FilterFIFOAssignment = 0;
 	CAN_FilterInitStructure.CAN_FilterActivation = ENABLE;
 
-	//inicjalizacja CAN i filtrów
+	//inicjalizacja CAN i filtrï¿½w
 	CAN_DeInit(CAN1);
 	//------------------------------------------------------------
 //	CAN_ITConfig(CAN1, CAN_IT_FMP0, ENABLE);
@@ -77,17 +77,17 @@ void initCan(void) {
 }
 
 //====================================================================================================
-//Obs³uga przerwania po odbierze
+//Obsï¿½uga przerwania po odbierze
 void CAN1_RX0_IRQHandler(void) {
 	if (CAN_GetITStatus(CAN1, CAN_IT_FMP0) != RESET) {
 		CAN_ClearITPendingBit(CAN1, CAN_IT_FMP0);
 	}
 }
 //====================================================================================================
-//Funkcja wysy³a prêdkosc do sterownika silnikow
+//Funkcja wysyï¿½a prï¿½dkosc do sterownika silnikow
 //Argumenty:
 //Silnik_strona: Lewa, Prawa, Oba
-//Predkosc: liczba w zakresie 0-255 gdzie 0==max predkosc do ty³u, 128==STOP, 255==max predkosc do przodu
+//Predkosc: liczba w zakresie 0-255 gdzie 0==max predkosc do tyï¿½u, 128==STOP, 255==max predkosc do przodu
 void sendSpeed(Silniki_strona strona, int predkosc1, int predkosc2,
 		int predkosc3) {
 	switch (strona) {
@@ -108,9 +108,9 @@ void sendSpeed(Silniki_strona strona, int predkosc1, int predkosc2,
 }
 
 //====================================================================================================
-//konwertuje 16bit wartosc predkosci i jedno bitowa wartosc kierunku na dwa bajty i wpisuje w dwa kolejne bajty wiadomoœci TX
+//konwertuje 16bit wartosc predkosci i jedno bitowa wartosc kierunku na dwa bajty i wpisuje w dwa kolejne bajty wiadomoï¿½ci TX
 //funkcja pomocnicza obecnie nie wykorzystywana
-//Adres: numer bajtu w wiadomoœci wys³anej za pomoc¹ CAN od którego funkcja zacznie wpisywanie danych (wartoœc od 0 do 7)
+//Adres: numer bajtu w wiadomoï¿½ci wysï¿½anej za pomocï¿½ CAN od ktï¿½rego funkcja zacznie wpisywanie danych (wartoï¿½c od 0 do 7)
 //Kierunek: 	Przod, Tyl
 //Predkosc: wartosc predkosci od 0 do 2^16
 void konwersja(int adres, Silnik_kierunk kierunek, int predkosc) {

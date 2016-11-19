@@ -5,6 +5,7 @@
 void USART2_IRQHandler(void) {
 	//ODBIERANIE ZNAKÓW
 	char inputChar;
+	uint8_t static blokujJoystick = 0;
 	volatile static uint8_t sterowanieJoystick = 0;
 	volatile static uint8_t licznik = 0;
 	if (USART_GetITStatus(USART2, USART_IT_RXNE) != RESET) {
@@ -22,9 +23,6 @@ void USART2_IRQHandler(void) {
 					sterowanieJoystick = 0;
 					int predkoscPrawa;
 					int predkoscLewa;
-					if (wskazanieX <= 0) {
-						wskazanieY = -wskazanieY;
-					}
 					predkoscPrawa = (int) (wskazanieX * 1.28 + 127)
 							+ wskazanieY * 1.27;
 					predkoscLewa = (int) (wskazanieX * 1.28 + 127)
@@ -40,9 +38,13 @@ void USART2_IRQHandler(void) {
 					} else if (predkoscLewa <= 0) {
 						predkoscLewa = 1;
 					}
-					sendSpeed(LEWA, predkoscLewa, predkoscLewa, predkoscLewa);
-					sendSpeed(PRAWA, predkoscPrawa, predkoscPrawa,
-							predkoscPrawa);
+					if (blokujJoystick == 0) {
+						sendSpeed(LEWA, predkoscLewa, predkoscLewa,
+								predkoscLewa);
+						sendSpeed(PRAWA, predkoscPrawa, predkoscPrawa,
+								predkoscPrawa);
+					}
+					blokujJoystick = 0;
 				}
 			} else {
 				switch (inputChar) {
@@ -100,7 +102,18 @@ void USART2_IRQHandler(void) {
 					lazikRuch = 0;
 					break;
 				case 'e':
-					batteryError = 0;
+					ResetTimer();
+					sendSpeed(PRAWA, 15, 15, 15);
+					sendSpeed(LEWA, 240, 240, 240);
+					lazikRuch = 1;
+					blokujJoystick = 1;
+					break;
+				case 'q':
+					ResetTimer();
+					sendSpeed(LEWA, 15, 15, 15);
+					sendSpeed(PRAWA, 240, 240, 240);
+					lazikRuch = 1;
+					blokujJoystick = 1;
 					break;
 				}
 			}

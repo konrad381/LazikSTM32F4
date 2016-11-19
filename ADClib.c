@@ -1,6 +1,5 @@
 #include "ADClib.h"
 
-
 //===============================================================================
 //funkcja inicjalizuj¹ca przetwornik ADC w trybie ciaglego pomiaru
 //aktywuje przerwanie od ADC w momencie przekroczenia wartoœci progowych napiêc wejsciowych
@@ -10,12 +9,14 @@ void initAdc() {
 	NVIC_InitTypeDef NVIC_InitStructure;
 	GPIO_InitTypeDef gpio;
 	batteryError = 0;
+	batteryAlert = 0;
+	batteryAlertTime = 0;
 
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 
 	NVIC_InitStructure.NVIC_IRQChannel = ADC_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
@@ -58,7 +59,10 @@ void initAdc() {
 void ADC_IRQHandler(void) {
 	if (ADC_GetITStatus(ADC1, ADC_IT_AWD)) {
 		ADC_ClearITPendingBit(ADC1, ADC_IT_AWD);
-		batteryError = 1;
+		ADC_ITConfig(ADC1, ADC_IT_AWD, DISABLE);
+			if(batteryAlert==1){
+				batteryError=1;
+			}
+			batteryAlert=1;
 	}
-
 }

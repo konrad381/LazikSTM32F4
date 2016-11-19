@@ -14,6 +14,8 @@
 #include "stm32f4xx.h"
 
 volatile uint8_t batteryError;
+volatile uint8_t batteryAlert;
+volatile uint16_t batteryAlertTime;
 
 void initAdc(void);
 void ADC_IRQHandler(void);
