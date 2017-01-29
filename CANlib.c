@@ -63,10 +63,9 @@ void initCan(void) {
 	//inicjalizacja CAN i filtr�w
 	CAN_DeInit(CAN1);
 	//------------------------------------------------------------
-//	CAN_ITConfig(CAN1, CAN_IT_FMP0, ENABLE);
+	CAN_ITConfig(CAN1, CAN_IT_FMP0, ENABLE);
 	CAN_Init(CAN1, &CAN_InitStructure);
 	CAN_FilterInit(&CAN_FilterInitStructure);
-
 	/* Transmit Structure preparation */
 	txMessage.StdId = 0x00;
 	txMessage.ExtId = 0x00;
@@ -81,13 +80,22 @@ void initCan(void) {
 void CAN1_RX0_IRQHandler(void) {
 	if (CAN_GetITStatus(CAN1, CAN_IT_FMP0) != RESET) {
 		CAN_ClearITPendingBit(CAN1, CAN_IT_FMP0);
+		CAN_Receive(CAN1, CAN_FIFO0, &rxMessage);
+		switch (rxMessage.DLC) {
+		case 7:
+			sendUartParam();
+			break;
+		case 2:
+			sendUartStartStop();
+			break;
+		}
 	}
 }
 //====================================================================================================
 //Funkcja wysy�a pr�dkosc do sterownika silnikow
 //Argumenty:
 //Silnik_strona: Lewa, Prawa, Oba
-//Predkosc: liczba w zakresie 0-255 gdzie 0==max predkosc do ty�u, 128==STOP, 255==max predkosc do przodu
+//Predkosc: liczba w zakresie -100  100
 void sendSpeed(Silniki_strona strona, int predkosc1, int predkosc2,
 		int predkosc3) {
 	switch (strona) {
@@ -101,10 +109,42 @@ void sendSpeed(Silniki_strona strona, int predkosc1, int predkosc2,
 		txMessage.StdId = 0x124;
 		break;
 	}
-	txMessage.Data[0] = predkosc1;
-	txMessage.Data[1] = predkosc2;
-	txMessage.Data[2] = predkosc3;
+	txMessage.DLC = 4;
+	txMessage.Data[0] = 'v';
+	txMessage.Data[1] = predkosc1;
+	txMessage.Data[2] = predkosc2;
+	txMessage.Data[3] = predkosc3;
 	CAN_Transmit(CAN1, &txMessage);
+}
+
+void sendStop(Silnik_enable zezwolenie) {
+	txMessage.StdId = 0x00;
+	txMessage.DLC = 2;
+	txMessage.Data[0] = 's';
+	txMessage.Data[1] = zezwolenie;
+	CAN_Transmit(CAN1, &txMessage);
+}
+
+void sendPid(uint8_t P, uint8_t I, uint8_t K) {
+	txMessage.StdId = 0x00;
+	txMessage.DLC = 4;
+	txMessage.Data[0] = 'p';
+	txMessage.Data[1] = P;
+	txMessage.Data[2] = I;
+	txMessage.Data[3] = K;
+	CAN_Transmit(CAN1, &txMessage);
+}
+
+void sendUartParam(void){
+	sendBuffor[0]='#';
+for(int i = 0;i<=7;i++){
+	sendBuffor[i+1]=rxMessage.Data[i];
+}
+UART2wyslij(8);
+}
+
+void sendUartStartStop(void){
+
 }
 
 //====================================================================================================
@@ -117,4 +157,6 @@ void konwersja(int adres, Silnik_kierunk kierunek, int predkosc) {
 	txMessage.Data[adres] = ((predkosc & 0xFE) | (kierunek & 01));
 	txMessage.Data[adres + 1] = predkosc >> 8;
 }
+
+
 

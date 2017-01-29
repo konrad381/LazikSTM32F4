@@ -12,6 +12,8 @@
 #define ADClib_H
 
 #include "stm32f4xx.h"
+#include "CANlib.h"
+#include "UARTlib.h"
 
 volatile uint8_t batteryError;
 volatile uint8_t batteryAlert;
@@ -19,6 +21,8 @@ volatile uint16_t batteryAlertTime;
 
 void initAdc(void);
 void ADC_IRQHandler(void);
+void AdcBatteryStatusCheck(void);
+void AdcBatteryStatusSend(void);
 
 #endif
 

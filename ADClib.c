@@ -62,7 +62,37 @@ void ADC_IRQHandler(void) {
 		ADC_ITConfig(ADC1, ADC_IT_AWD, DISABLE);
 			if(batteryAlert==1){
 				batteryError=1;
+				sendStop(STOP);
 			}
 			batteryAlert=1;
 	}
+}
+
+//Do sprawdzania czy spadek napiêcia na baterii jest sta³y (jeœli po 5s dalej niski znaczy ze roz³adowana)
+void AdcBatteryStatusCheck(void){
+	if (batteryAlert >0){
+			batteryAlertTime++;
+			if(batteryAlertTime==5000){
+				ADC_ClearITPendingBit(ADC1, ADC_IT_AWD);
+				ADC_ITConfig(ADC1, ADC_IT_AWD, ENABLE);
+			}
+			if(batteryAlertTime>5020){
+				batteryAlert=0;
+				batteryAlertTime=0;
+			}
+		}
+}
+
+void AdcBatteryStatusSend(void){
+static uint16_t licznik =0;
+licznik++;
+if(licznik==1000){
+	licznik =0;
+	sendBuffor[0]='#';
+	sendBuffor[1]='B';
+	sendBuffor[2]=0xFF&ADC_GetConversionValue(ADC1);
+	sendBuffor[3]=(0xFF00&ADC_GetConversionValue(ADC1))>>8;
+	UART2wyslij(4);
+}
+
 }

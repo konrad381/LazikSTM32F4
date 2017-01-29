@@ -70,6 +70,7 @@ void TimingDelay_Decrement(void) {
 
 //==================================================================================================
 void ResetTimer() {
+	lazikRuch = 1;
 	timingDelay = wartoscOpoznienia;
 }
 
@@ -77,20 +78,10 @@ void ResetTimer() {
 void SysTick_Handler(void) {
 	TimingDelay_Decrement();
 	if (timingDelay == 0 && lazikRuch != 0) {
-		sendSpeed(OBA, 128, 128, 128);
+		sendStop(STOP);
 		lazikRuch = 0;
 	}
-	//Do sprawdzania czy spadek napiêcia na baterii jest sta³y (jeœli po 5s dalej niski znaczy ze roz³adowana)
-	if (batteryAlert >0){
-		batteryAlertTime++;
-		if(batteryAlertTime==5000){
-			ADC_ClearITPendingBit(ADC1, ADC_IT_AWD);
-			ADC_ITConfig(ADC1, ADC_IT_AWD, ENABLE);
-		}
-		if(batteryAlertTime>5020){
-			batteryAlert=0;
-			batteryAlertTime=0;
-		}
-	}
+	AdcBatteryStatusCheck();
+	AdcBatteryStatusSend();
 }
 
