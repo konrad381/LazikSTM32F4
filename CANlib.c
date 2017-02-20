@@ -1,9 +1,18 @@
 #include "CANlib.h"
 
-void konwersja(int adres, Silnik_kierunk kierunek, int predkosc);
-
 //====================================================================================================
-//Funkcja inicjaluzje CAN1 na pinach PB8 i PB9
+/**
+  * @brief  Funkcja inicjaluzje CAN1 na pinach PB8 i PB9
+  * @note   Adresowanie:
+ *  		Wiadomosc do wszystkich				0x00
+ * 			Wiadomosc do sterowanika prawego 	0x123
+ *  		Wiadomosc do sterowanika lewego 	0x124
+ *  		Adres sterownika glownego			0x125
+ *  		Adresowanie w inicjalizacji filtru
+ *  		Wysyłanie wiadomosci bez przerwania
+ *  		Odbiór za pomoca przerwania CAN1_RX0_IRQHandler
+  * @retval None
+  */
 void initCan(void) {
 	//inicjalizacja struktur
 	GPIO_InitTypeDef GPIO_InitStructure;
@@ -12,7 +21,6 @@ void initCan(void) {
 	CAN_FilterInitTypeDef CAN_FilterInitStructure;
 
 	//inicjalizacja przerwa�
-
 	NVIC_InitStructure.NVIC_IRQChannel = CAN1_RX0_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0;
@@ -76,7 +84,11 @@ void initCan(void) {
 }
 
 //====================================================================================================
-//Obs�uga przerwania po odbierze
+/**
+  * @brief  Obsługa przerwanie oddbiorczego
+  * @note   Okreslenie typu wiadomosci za pomoca dlugosci wiadomosci (rxMessage.DLC)
+  * @retval None
+  */
 void CAN1_RX0_IRQHandler(void) {
 	if (CAN_GetITStatus(CAN1, CAN_IT_FMP0) != RESET) {
 		CAN_ClearITPendingBit(CAN1, CAN_IT_FMP0);
@@ -92,10 +104,17 @@ void CAN1_RX0_IRQHandler(void) {
 	}
 }
 //====================================================================================================
-//Funkcja wysy�a pr�dkosc do sterownika silnikow
-//Argumenty:
-//Silnik_strona: Lewa, Prawa, Oba
-//Predkosc: liczba w zakresie -100  100
+/**
+  * @brief  Funkcja wysy�a pr�dkosc do sterownika silnikow
+  * @note   wysyla zadane predkosci do wszystkich trzech silników
+  * 		sterowanych przez wybrany sterownik
+  * @param  strona : Lewa - wyslanie do lewego sterownika
+  * 				 Prawa - wyslanie do prawego sterowanika
+  * 				 Oba - wyslanie do obu sterownikow
+  * @param predkosc(1/2/3): watrosc predkosci kolejnych silnikow
+  * 						liczba w zakresie -100, 100
+  * @retval None
+  */
 void sendSpeed(Silniki_strona strona, int predkosc1, int predkosc2,
 		int predkosc3) {
 	switch (strona) {
@@ -117,6 +136,16 @@ void sendSpeed(Silniki_strona strona, int predkosc1, int predkosc2,
 	CAN_Transmit(CAN1, &txMessage);
 }
 
+//====================================================================================================
+/**
+  * @brief  Funkcja uruchamia lub zatrzymuje silniki (generowanie PWM w sterowniku)
+  * @note   zatrzymanie silinków oznacza ich wyłączenie, pojazd moze zaczac się poruszc
+  * 		pod wlacnym ciezarem. Funkcja wysyla polecenie zatrzymania po magistrali CAN
+  * 		w razie uszkodzenia magistrali funkcja nie zatrzyma silników.
+  * @param  zezwolenie: STOP - silnik zostaje zatrzymany
+  * 					START - silnik zostaje uruchomiony
+  * @retval None
+  */
 void sendStop(Silnik_enable zezwolenie) {
 	txMessage.StdId = 0x00;
 	txMessage.DLC = 2;
@@ -125,38 +154,49 @@ void sendStop(Silnik_enable zezwolenie) {
 	CAN_Transmit(CAN1, &txMessage);
 }
 
-void sendPid(uint8_t P, uint8_t I, uint8_t K) {
+//====================================================================================================
+/**
+  * @brief  Funkcja ustawia nastawy regulatora PI oraz warosc K wzmocnienia antywindup'owego
+  * @note  	po zmianie nastawów pojazd zostaje automatycznie zatrzymany, trzeba ponownie uruchomic napedy
+  * @param  P - wartosc wzmocnienia czlonu P (od 0 do 255)
+  * @param 	Ilow - stala czasowa członu calkujacego(czesc niska wartosci 16 bitowej)(od 0 do 65535)
+  * @param 	Ihigh - stala czasowa członu calkujacego(czesc wysok wartosci 16 bitowej)(od 0 do 65535)
+  * @param  K - wartosc wzmocnienia roznicy sygnalu przed i po nasyceniu (antywindup)(od 0 do 255)
+  * @retval None
+  */
+void sendPid(uint8_t P, uint8_t Ilow, uint8_t Ihigh, uint8_t K) {
 	txMessage.StdId = 0x00;
-	txMessage.DLC = 4;
+	txMessage.DLC = 5;
 	txMessage.Data[0] = 'p';
 	txMessage.Data[1] = P;
-	txMessage.Data[2] = I;
-	txMessage.Data[3] = K;
+	txMessage.Data[2] = Ilow;
+	txMessage.Data[3] = Ihigh;
+	txMessage.Data[4] = K;
 	CAN_Transmit(CAN1, &txMessage);
 }
 
-void sendUartParam(void){
-	sendBuffor[0]='#';
-for(int i = 0;i<=7;i++){
-	sendBuffor[i+1]=rxMessage.Data[i];
-}
-UART2wyslij(8);
-}
-
-void sendUartStartStop(void){
-
+//====================================================================================================
+/**
+  * @brief  Przesyla otrzymane parametry predkosci i pradu z silnika (przez CAN) do sterowanika (przez UART2)
+  * @note  	funkcja w nie modyfikuje otrzymanych danych a jedynie przesyła je dalej
+  * 		dane są odczytywane bezpośrednioa z rxMessage.Data[]
+  * @retval None
+  */
+void sendUartParam(void) {
+	sendBuffor[0] = '#';
+	for (int i = 0; i <= 7; i++) {
+		sendBuffor[i + 1] = rxMessage.Data[i];
+	}
+	UART2wyslij(8);
 }
 
 //====================================================================================================
-//konwertuje 16bit wartosc predkosci i jedno bitowa wartosc kierunku na dwa bajty i wpisuje w dwa kolejne bajty wiadomo�ci TX
-//funkcja pomocnicza obecnie nie wykorzystywana
-//Adres: numer bajtu w wiadomo�ci wys�anej za pomoc� CAN od kt�rego funkcja zacznie wpisywanie danych (warto�c od 0 do 7)
-//Kierunek: 	Przod, Tyl
-//Predkosc: wartosc predkosci od 0 do 2^16
-void konwersja(int adres, Silnik_kierunk kierunek, int predkosc) {
-	txMessage.Data[adres] = ((predkosc & 0xFE) | (kierunek & 01));
-	txMessage.Data[adres + 1] = predkosc >> 8;
+/**
+  * @brief  Przesyla potwierdzenie wykonania polecenia sendStop() do jednostki sterujacej
+  * @note  	na chwile obecna funkcja nie aktywna
+  * @retval None
+  */
+void sendUartStartStop(void) {
+
 }
-
-
 

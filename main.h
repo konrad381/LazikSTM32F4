@@ -1,12 +1,10 @@
 //Nazwa: main.h
 //Autor: Konrad Aleksiejuk
 //Projekt: £azik marsjañski KNR
-  
-/* Define to prevent recursive inclusion -------------------------------------*/
+
 #ifndef __MAIN_H
 #define __MAIN_H
 
-/* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx.h"
 #include "stm32f4xx.h"
 #include "CANlib.h"
@@ -14,16 +12,16 @@
 #include "UARTlib.h"
 #include "ADClib.h"
 
-/* Exported types ------------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
+#define wartoscOpoznienia 200
+
 volatile uint8_t lazikRuch;
-/* Exported functions ------------------------------------------------------- */
-void TimingDelay_Decrement(void);
+static volatile uint32_t timingDelay;
+static volatile uint32_t opoznienie;
+
+
+void delay(uint32_t nTime);
 void SysTick_Handler(void);
 void ResetTimer(void);
 void initGPIO(void);
 
-#endif /* __MAIN_H */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

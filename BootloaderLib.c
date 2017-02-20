@@ -3,8 +3,13 @@
 void (*SysMemBootJump)(void);
 
 //====================================================================================================
-//Funkcja uruchamia bootloader (ustawia flagê i restartuje procesor)
-//Wymagana jest obecnosc funkcji initBootloader(); w pierwszym wierszu funckji main() do uruchomienia bootloadera po resecie
+/**
+ * @brief 	Uruchamia bootloader (mozliwe programowanie za pomoca UART2)
+ * @note   	funkcja ustawia flagê i resetuje procesor. Wymagana jest obecnosc
+ * 			funkcji initBootloader(); w pierwszym wierszu funckji main() do
+ * 			uruchomienia bootloadera po resecie
+ * @retval None
+ */
 void startBootloader(void) {
 
 	RTC_WriteBackupRegister(RTC_BKP_DR4, 0xAA);// Ustawienie flagi, która bêdzie widoczna po resecie
@@ -14,8 +19,15 @@ while(1)
 	NVIC_SystemReset();
 }
 
+
 //====================================================================================================
-//Funkcja inicjalizuje bootloader (uruchamia go po resecie w momencie gdy ustawiona jest flaga)
+/**
+ * @brief 	Sprawdza czy nalezy uruchomic bootloader po resecie
+ * @note   	Funkcja inicjalizuje bootloader (uruchamia go po resecie w momencie gdy
+ * 			ustawiona jest flaga). Funkcja powinna znajdowac siê w pierwszym wierszu
+ * 			funkcji main().
+ * @retval None
+ */
 void initBootloader(void) {
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR,ENABLE);
 	RCC_AHB1PeriphClockLPModeCmd(RCC_AHB1Periph_BKPSRAM, ENABLE);

@@ -5,8 +5,8 @@
  * INSTRUKCJA OBS£UGI BIBLIOTEKI
  * 1)dolacz biblioteke do pliku z funkcja main za pomoc¹ polecenia #include "BootLoaderLib.h"
  * 2)na samym poczatku petli glownej umiesc funkcje BootLoaderInit()
- * !!!UWAGA BootLoaderInit() musi byc pierwsza linijka funkcji main!!!!!
- * 3)W miejscu w którym chcesz uruchomic Bootloader umiesc funkcje BootLoaderUruchom();
+ * !!!UWAGA initBootloader() musi byc pierwsza linijka funkcji main!!!!!
+ * 3)W miejscu w którym chcesz uruchomic Bootloader umiesc funkcje startBootloader();
  * Pamietaj, ze po uruchomieniu bootloadera nastapi reset
  * ponowne uruchomienie programu glownego bedzie mozliwe dopiero po wgraniu nowego programu lub recznym wcisnieciu przycisku RESET
  *
