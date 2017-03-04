@@ -96,7 +96,7 @@ void AdcBatteryStatusCheck(void) {
 			ADC_ClearITPendingBit(ADC1, ADC_IT_AWD);
 			ADC_ITConfig(ADC1, ADC_IT_AWD, ENABLE);
 		}
-		if (batteryAlertTime > (betteryAlertPeriod+20)) {
+		if (batteryAlertTime > (betteryAlertPeriod + 20)) {
 			batteryAlert = 0;
 			batteryAlertTime = 0;
 		}
@@ -114,13 +114,15 @@ void AdcBatteryStatusCheck(void) {
  */
 void AdcBatteryStatusSend(void) {
 	static uint16_t licznik = 0;
+	static uint8_t sendBuffor[5];
 	licznik++;
-	if (licznik == batteryValuePeriod) {
-		licznik = 0;
-		sendBuffor[0] = '#';
-		sendBuffor[1] = 'B';
-		sendBuffor[2] = 0xFF & ADC_GetConversionValue(ADC1);
-		sendBuffor[3] = (0xFF00 & ADC_GetConversionValue(ADC1)) >> 8;
-		UART2wyslij(4);
+	if (licznik == batteryValuePeriod ) {
+			licznik = 0;
+			sendBuffor[0] = '#';
+			sendBuffor[1] = 'B';
+			sendBuffor[2] = 0xFF & ADC_GetConversionValue(ADC1);
+			sendBuffor[3] = (0xFF00 & ADC_GetConversionValue(ADC1)) >> 8;
+			UART2wyslij(&sendBuffor[0],4);
+		}
 	}
-}
+

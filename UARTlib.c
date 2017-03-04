@@ -2,12 +2,12 @@
 
 //========================================================================================
 /**
-  * @brief  inicjalizacja UART2 na pinach TX PA2, RX PA3
-  * @note   Uart wykorzystywany do komunikacji z jednostk¹ steruj¹ca
-  * 		Baudrate 115200, 8bit, 1 stop, parity no
-  * 		Inicjalizacja przerwania odbiorczego USART2_IRQHandler
-  * @retval None
-  */
+ * @brief  inicjalizacja UART2 na pinach TX PA2, RX PA3
+ * @note   Uart wykorzystywany do komunikacji z jednostk¹ steruj¹ca
+ * 		Baudrate 115200, 8bit, 1 stop, parity no
+ * 		Inicjalizacja przerwania odbiorczego USART2_IRQHandler
+ * @retval None
+ */
 void initUart2(void) {
 	GPIO_InitTypeDef GPIO_InitStruct;
 	NVIC_InitTypeDef NVIC_InitStruct;
@@ -45,20 +45,19 @@ void initUart2(void) {
 
 //====================================================================================================
 /**
-  * @brief  funkcja obs³ugi przerwania od UART2
-  * @note   zarówno przerwania odbiorcze i nadawcze
-  * 		odbieranie ramki rozpoczyna znak "#", wiadomosc jest rozpoznawana na
-  * 		podstawie drugiego znaku i okreslana jest liczba znakow do odebrania.
-  * 		Po odebraniu calej ramki polecenie jest wykonywane.
-  * @retval None
-  */
+ * @brief  funkcja obs³ugi przerwania od UART2
+ * @note   zarówno przerwania odbiorcze i nadawcze
+ * 		odbieranie ramki rozpoczyna znak "#", wiadomosc jest rozpoznawana na
+ * 		podstawie drugiego znaku i okreslana jest liczba znakow do odebrania.
+ * 		Po odebraniu calej ramki polecenie jest wykonywane.
+ * @retval None
+ */
 void USART2_IRQHandler(void) {
 	//ODBIERANIE ZNAKÓW
 	char inputChar;
 	volatile static uint8_t znakiDoOdebrania = 0;
 	volatile static uint8_t odbiorRamki = 0;
 	volatile static uint8_t licznik = 0;
-	volatile static uint8_t licznikNadawania = 1;
 	if (USART_GetITStatus(USART2, USART_IT_RXNE) != RESET) {
 		USART_ClearITPendingBit(USART2, USART_IT_RXNE);
 		inputChar = USART_ReceiveData(USART2);
@@ -101,25 +100,45 @@ void USART2_IRQHandler(void) {
 	//wysylanie znaków
 	if (USART_GetITStatus(USART2, USART_IT_TXE)) {
 		USART_ClearITPendingBit(USART2, USART_IT_TXE);
-		USART_SendData(USART2, sendBuffor[licznikNadawania]);
-		licznikNadawania++;
-		if (licznikNadawania == sendDataLength) {
-			licznikNadawania = 1;
-			USART_ITConfig(USART2, USART_IT_TXE, DISABLE);//wy³aczenie przerwania od pustego bufora nadawczego
+
+		static volatile  int k=0;
+		static volatile  uint8_t trwaWysylanie=0;
+
+		if (trwaWysylanie == 1) {
+			USART_SendData(USART2, *sendData[k].sendBuffor);
+			sendData[k].sendBuffor++;
+			sendData[k].dataLenght--;
+			if (sendData[k].dataLenght == 0) {
+				trwaWysylanie = 0;
+			}
+		}
+		if (trwaWysylanie == 0) {
+			for (k = 0; k < 9 && trwaWysylanie == 0; ) {
+				if (sendData[k].dataLenght > 0) {
+					USART_SendData(USART2, *sendData[k].sendBuffor);
+					sendData[k].sendBuffor++;
+					sendData[k].dataLenght--;
+					trwaWysylanie = 1;
+				}else{
+					k++;
+				}
+			}
+			if (k >= 9) {
+				k = 0;
+				USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
+			}
 		}
 	}
-
 }
-
 
 //====================================================================================================
 /**
-  * @brief  Funkcja inicjaluzuj¹ca UART3 na pinach TX PC10, RX PC11;
-  * @note   Uart niewykorzystywany (zapasowy)
-  * 		Baudrate 115200, 8bit, 1 stop, parity no
-  * 		Inicjalizacja przerwania odbiorczego USART3_IRQHandler
-  * @retval None
-  */
+ * @brief  Funkcja inicjaluzuj¹ca UART3 na pinach TX PC10, RX PC11;
+ * @note   Uart niewykorzystywany (zapasowy)
+ * 		Baudrate 115200, 8bit, 1 stop, parity no
+ * 		Inicjalizacja przerwania odbiorczego USART3_IRQHandler
+ * @retval None
+ */
 void initUart3(void) {
 	GPIO_InitTypeDef GPIO_InitStruct;
 	NVIC_InitTypeDef NVIC_InitStruct;
@@ -157,26 +176,26 @@ void initUart3(void) {
 
 //====================================================================================================
 /**
-  * @brief  funkcja obs³ugi przerwania od UART3
-  * @note   obenie nie uzywane
-  * @retval None
-  */
+ * @brief  funkcja obs³ugi przerwania od UART3
+ * @note   obenie nie uzywane
+ * @retval None
+ */
 void USART3_IRQHandler(void) {
 //ODBIERANIE ZNAKÓW
 	//char inputChar;
 	if (USART_GetITStatus(USART3, USART_IT_RXNE) != RESET) {
-	//	inputChar = USART_ReceiveData(USART3);
+		//	inputChar = USART_ReceiveData(USART3);
 	}
 }
 
 //==============================================================================
 /**
-  * @brief  inicjalizacja UART1 na pinach TX PA9, RX PA10
-  * @note   Uart wykorzystywany do komunikacji z modu³em GPS
-  * 		Baudrate 4800, 8bit, 1 stop, parity no
-  * 		Inicjalizacja przerwania odbiorczego USART1_IRQHandler
-  * @retval None
-  */
+ * @brief  inicjalizacja UART1 na pinach TX PA9, RX PA10
+ * @note   Uart wykorzystywany do komunikacji z modu³em GPS
+ * 		Baudrate 4800, 8bit, 1 stop, parity no
+ * 		Inicjalizacja przerwania odbiorczego USART1_IRQHandler
+ * @retval None
+ */
 void initUart1(void) {
 	GPIO_InitTypeDef GPIO_InitStruct;
 	NVIC_InitTypeDef NVIC_InitStruct;
@@ -214,23 +233,23 @@ void initUart1(void) {
 
 //==============================================================================
 /**
-  * @brief  funkcja obs³ugi przerwania od UART1
-  * @note   zarówno przerwania odbiorcze i nadawcze (wykorzystywane tylko odbiorcze)
-  * 		odbieranie ramki rozpoczyna znak "$", a koñcz¹cej znakiem "*"
-  * 		i wpisanie do GPSdata[]
-  * @retval None
-  */
+ * @brief  funkcja obs³ugi przerwania od UART1
+ * @note   zarówno przerwania odbiorcze i nadawcze (wykorzystywane tylko odbiorcze)
+ * 		odbieranie ramki rozpoczyna znak "$", a koñcz¹cej znakiem "*"
+ * 		i wpisanie do GPSdata[]
+ * @retval None
+ */
 void USART1_IRQHandler(void) {
 	char inputChar;
-	volatile static uint8_t odbiorRamki=0;
+	volatile static uint8_t odbiorRamki = 0;
 	if (USART_GetITStatus(USART1, USART_IT_RXNE) != RESET) {
 		inputChar = USART_ReceiveData(USART1);
 		if (odbiorRamki > 0) {
 			GPSdata[odbiorRamki] = inputChar;
 			odbiorRamki++;
-			if(inputChar=='*'){
+			if (inputChar == '*') {
 				sendGpsData(odbiorRamki);
-				odbiorRamki=0;
+				odbiorRamki = 0;
 
 			}
 		} else if (inputChar == '$') {
@@ -242,12 +261,12 @@ void USART1_IRQHandler(void) {
 
 //===================================================================================
 /**
-  * @brief  funkcja oblicza i wysyla zadana predkosc do silników po obu stronach
-  * 		na podstawie wartosci otrzymanych ze jednostki sterujacej
-  * @note   wartosc obliczana na podstawie wartosci wychylenia joysticka
-  * 		w obu osiach X i Y wartosc od -100 do 100
-  * @retval None
-  */
+ * @brief  funkcja oblicza i wysyla zadana predkosc do silników po obu stronach
+ * 		na podstawie wartosci otrzymanych ze jednostki sterujacej
+ * @note   wartosc obliczana na podstawie wartosci wychylenia joysticka
+ * 		w obu osiach X i Y wartosc od -100 do 100
+ * @retval None
+ */
 void ustawPredkosc(void) {
 	static int8_t wskazanieX;
 	static int8_t wskazanieY;
@@ -274,12 +293,12 @@ void ustawPredkosc(void) {
 
 //===============================================================================
 /**
-  * @brief  funkcja okresla na podstawie pierwszego znaku w linii jak interpretowac dane polecenie.
-  * @note   rozpoznawane wartosci: v - ustawienie predkosci
-  * 							   S - start/stop silników
-  * 							   p - nastawy regulatorów PID
-  * @retval None
-  */
+ * @brief  funkcja okresla na podstawie pierwszego znaku w linii jak interpretowac dane polecenie.
+ * @note   rozpoznawane wartosci: v - ustawienie predkosci
+ * 							   S - start/stop silników
+ * 							   p - nastawy regulatorów PID
+ * @retval None
+ */
 void wykonajPolecenie(void) {
 	switch (polecenie[0]) {
 	case 'v':
@@ -304,32 +323,44 @@ void wykonajPolecenie(void) {
 
 //===============================================================================
 /**
-  * @brief  funkcja wysyla dane z sendBuffor[] do jednostki sterujacej za pomoca UART2
-  * @note   funkcja wysyla pierwsza dan¹ i inicjalizuje przerwanie od pustego buffora
-  * 		nadawczego, kolejne dane sa wpisywane i wysylane w przerwaniu, do momentu
-  * 		gdy okreslona liczba znakow nie zostanie wyslana.
-  * @param 	dlugosc - liczba znaków które maj¹ zostac wyslane od(1 do 99)
-  * @retval None
-  */
-void UART2wyslij(uint8_t dlugosc) {
-	sendDataLength = dlugosc;
-	USART_SendData(USART2, sendBuffor[0]);
-	USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
+ * @brief  funkcja wysyla dane ze wskazanego adresu tablicy do jednostki sterujacej za pomoca UART2
+ * @note   funkcja wpisuje adres pierwszego znaku w tablicy i d³ugosc tabicy do tablicy struktur,
+ * 		   która przechowuje dane i wysyla je pokolei( dane nie sa nadpisywane ani tracone)
+ * @param 	dataToSend - wskaŸnik do pierwszego elementu tablicy zawieraj¹cej dane do wyslania
+ * @param 	dlugosc - liczba znaków które maj¹ zostac wyslane od(1 do 99)
+ * @retval None
+ */
+void UART2wyslij(uint8_t* dataToSend, uint8_t dlugosc) {
+	uint8_t koniec = 0;
+	for (int l = 0; l < 10 && koniec == 0; l++) {
+		if (sendData[l].dataLenght == 0) {
+			sendData[l].dataLenght = dlugosc;
+			sendData[l].sendBuffor = dataToSend;
+			koniec = 1;
+		}
+	}
+	if (USART_GetITStatus(USART2, USART_IT_TXE) == RESET) {
+		USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
+	}
 }
 
 //===============================================================================
 /**
-  * @brief  funkcja interpretuje dane z GPS i przesy³a je do jednostki sterujacej
-  * @note   dane GPS s¹ odczytywane z GPSdata[]
-  * @param 	dlugoscRamki - dlugosc odebranej ramki danych GPS która ma zostac zinterpretowana
-  * @retval None
-  */
-void sendGpsData(uint8_t dlugoscRamki){
-if(GPSdata[3]=='G'&&GPSdata[4]=='G'&& GPSdata[5]=='A'){
-for(int licznik=0;licznik<=dlugoscRamki;licznik++){
-	if(GPSdata[licznik]==','){
-		//tutaj coœ powstanie jak powstanie to bêdzie dobrze
+ * @brief  funkcja interpretuje dane z GPS i przesy³a je do jednostki sterujacej
+ * @note   dane GPS s¹ odczytywane z GPSdata[]
+ * @param 	dlugoscRamki - dlugosc odebranej ramki danych GPS która ma zostac zinterpretowana
+ * @retval None
+ */
+void sendGpsData(uint8_t dlugoscRamki) {
+	static uint8_t sendBuffor[52];
+	if (GPSdata[3] == 'G' && GPSdata[4] == 'G' && GPSdata[5] == 'A'
+			&& dlugoscRamki >= 45) {
+		sendBuffor[0]='#';
+		sendBuffor[1]='G';
+		for (int i = 0; i < 49; i++) {
+					sendBuffor[i+2] = GPSdata[i];
+		}
+			UART2wyslij(&sendBuffor[0],50);
 	}
 }
-}
-}
+
