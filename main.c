@@ -1,5 +1,5 @@
 #include "main.h"
-
+//Adas to byl
 //===================================================================================================
 int main(void) {
 	RCC_ClocksTypeDef RCC_Clocks;
